@@ -1,6 +1,7 @@
 spring:
   application:
     name: demo
+    port: 8080
 
 # define mysql properties here
   datasource:
