@@ -12,10 +12,4 @@ public interface PointRepository extends JpaRepository<Point, Long> {
     @Query("SELECT p FROM Point p WHERE p.userId = :userId")
     List<Point> findByUserId(@Param("userId") String userId);
 
-    @Query("SELECT p FROM Point p WHERE p.userId = :userId AND p.createdAt >= :startDate AND p.createdAt <= :endDate")
-    List<Point> findByUserIdAndDateRange(
-        @Param("userId") String userId,
-        @Param("startDate") Date startDate,
-        @Param("endDate") Date endDate
-    );
 }
