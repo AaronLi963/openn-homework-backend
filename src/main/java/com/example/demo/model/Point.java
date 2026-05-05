@@ -33,4 +33,9 @@ public class Point {
     private Instant createdAt;
     @Column(name = "updated_at", insertable = false, updatable = false)
     private Instant updatedAt;
+
+    @Override
+    public String toString() {
+        return String.format("Point {id=%d, userId=%s, amount=%d, reason=%s, createdAt=%s, updatedAt=%s}", id, userId, amount, reason, createdAt, updatedAt);
+    }
 }

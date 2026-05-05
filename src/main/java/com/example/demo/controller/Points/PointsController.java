@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/points")
@@ -18,13 +20,18 @@ public class PointsController {
 
     @Autowired
     private PointService pointService;
+
+    private static final Logger logger = LoggerFactory.getLogger(PointsController.class);
     
     @PostMapping
-    public Response addPoints(@Valid @RequestBody PointDto request) {
+    public Response addPoints(@Valid @RequestBody AddPointsRequest request) {
         try {
+            logger.info("Adding points for user: {}", request.getUserId());
             PointDto point = pointService.addPoints(request.getUserId(), request.getAmount(), request.getReason());
+            logger.info("Points added successfully for user: {}", request.getUserId());
             return Response.success(point);
         } catch (Exception e) {
+            logger.error("Failed to add points for user: {}, error: {}", request.getUserId(), e.getMessage());
             return Response.error(Error.ERROR_CODE_INTERNAL_ERROR, e.getMessage());
         }
     }
