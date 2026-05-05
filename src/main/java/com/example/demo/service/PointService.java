@@ -30,10 +30,7 @@ public class PointService {
         try {
             pointRepository.save(point);
             logger.info("Points added successfully: {}", point);
-            
-            // cache user points after adding points
-            Integer totalPoints = getUserPoints(userId);
-            cacheUserPoints(userId, totalPoints);
+            clearCacheUserPoints(userId);
         } catch (Exception e) {
             logger.error("Failed to add points, input: {}, error: {}", point, e.getMessage());
             throw new RuntimeException("Failed to add points", e);
@@ -92,6 +89,17 @@ public class PointService {
             // no need to throw exception, just log error
             logger.error("Failed to get cached user points, userId: {}, error: {}", userId, e);
             return null;
+        }
+    }
+
+    private void clearCacheUserPoints(String userId) {
+        String key = getCacheKey(userId);
+        try {
+            logger.info("Clear cached user points: userId: {}", userId);
+            redisTemplate.delete(key);
+        } catch (Exception e) {
+            // no need to throw exception, just log error
+            logger.error("Failed to clear cached user points, userId: {}, error: {}", userId, e);
         }
     }
 
