@@ -1,7 +1,8 @@
 .PHONY: docker-compose
 
 docker-compose:
-	docker-compose up -d
+	docker compose down -v
+	docker compose up -d
 
 run-app:
 	MYSQL_HOST=localhost \
