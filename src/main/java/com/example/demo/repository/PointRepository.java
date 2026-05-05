@@ -11,4 +11,6 @@ public interface PointRepository extends JpaRepository<Point, Long> {
     @Query("SELECT p FROM Point p WHERE p.userId = :userId")
     List<Point> findByUserId(@Param("userId") String userId);
 
+    @Query("SELECT SUM(p.amount) FROM Point p WHERE p.userId = :userId")
+    Integer sumAmountByUserId(@Param("userId") String userId);
 }
