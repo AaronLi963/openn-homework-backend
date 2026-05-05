@@ -15,4 +15,9 @@ public class PointDto {
         this.amount = amount;
         this.reason = reason;
     }
+
+    @Override
+    public String toString() {
+        return String.format("PointDto {id=%d, userId=%s, amount=%d, reason=%s}", id, userId, amount, reason);
+    }
 }
