@@ -7,12 +7,15 @@ import com.example.demo.service.dto.PointDto;
 
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/points")
@@ -32,6 +35,22 @@ public class PointsController {
             return Response.success(point);
         } catch (Exception e) {
             logger.error("Failed to add points for user: {}, error: {}", request.getUserId(), e.getMessage());
+            return Response.error(Error.ERROR_CODE_INTERNAL_ERROR, e.getMessage());
+        }
+    }
+
+    @GetMapping("/{userId}")
+    public Response getUserPoints(@PathVariable String userId) {
+        try {
+            logger.info("Getting points for user: {}", userId);
+            Integer points = pointService.getUserPoints(userId);
+            logger.info("Points fetched successfully for user: {}", userId);
+            HashMap<String, Object> data = new HashMap<>();
+            data.put("userId", userId);
+            data.put("points", points);
+            return Response.success(data);
+        } catch (Exception e) {
+            logger.error("Failed to get points for user: {}, error: {}", userId, e.getMessage());
             return Response.error(Error.ERROR_CODE_INTERNAL_ERROR, e.getMessage());
         }
     }

@@ -30,6 +30,20 @@ public class PointService {
         }
         return convertToDto(point);
     }
+
+    public Integer getUserPoints(String userId) throws Exception {
+        try {
+            Integer points = pointRepository.sumAmountByUserId(userId);
+            if (points == null) {
+                logger.info("No points found for user: {}", userId);
+                return 0;
+            }
+            return points;
+        } catch (Exception e) {
+            logger.error("Failed to get user points, user id: {}, error: {}", userId, e.getMessage());
+            throw new RuntimeException("Failed to get user points", e);
+        }
+    }
     
     private PointDto convertToDto(Point point) {
         return new PointDto(point.getId(), point.getUserId(), point.getAmount(), point.getReason());
