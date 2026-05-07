@@ -30,9 +30,9 @@ public class PointsController {
     public Response addPoints(@Valid @RequestBody AddPointsRequest request) {
         try {
             logger.info("Adding points for user: {}", request.getUserId());
-            PointDto point = pointService.addPoints(request.getUserId(), request.getAmount(), request.getReason());
+            Integer totalPoints = pointService.addPoints(request.getUserId(), request.getAmount(), request.getReason());
             logger.info("Points added successfully for user: {}", request.getUserId());
-            return Response.success(point);
+            return Response.success(new UserPointsResponse(request.getUserId(), totalPoints));
         } catch (Exception e) {
             logger.error("Failed to add points for user: {}, error: {}", request.getUserId(), e.getMessage());
             return Response.error(Error.ERROR_CODE_INTERNAL_ERROR, e.getMessage());
@@ -43,12 +43,9 @@ public class PointsController {
     public Response getUserPoints(@PathVariable String userId) {
         try {
             logger.info("Getting points for user: {}", userId);
-            Integer points = pointService.getUserPoints(userId);
+            Integer totalPoints = pointService.getUserPoints(userId);
             logger.info("Points fetched successfully for user: {}", userId);
-            HashMap<String, Object> data = new HashMap<>();
-            data.put("userId", userId);
-            data.put("points", points);
-            return Response.success(data);
+            return Response.success(new UserPointsResponse(userId, totalPoints));
         } catch (Exception e) {
             logger.error("Failed to get points for user: {}, error: {}", userId, e.getMessage());
             return Response.error(Error.ERROR_CODE_INTERNAL_ERROR, e.getMessage());
