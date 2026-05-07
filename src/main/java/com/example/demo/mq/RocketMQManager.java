@@ -70,7 +70,7 @@ public class RocketMQManager {
         try {
             // shutdown producer
             producer.shutdown();
-            logger.info("Producer shutdown successfully");
+            logger.info("Shutdown Producer successfully");
 
             // shutdown consumers
             consumersMap.values().forEach(consumers -> consumers.forEach(consumer -> {
@@ -80,6 +80,7 @@ public class RocketMQManager {
                     logger.error("Failed to shutdown consumer", e);
                 }
             }));
+            logger.info("Shutdown Consumers successfully");
         } catch (Exception e) {
             throw new RuntimeException("Failed to shutdown producer and consumers", e);
         }
