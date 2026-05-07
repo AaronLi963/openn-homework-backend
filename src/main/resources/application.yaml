@@ -23,4 +23,4 @@ spring:
 
 # define rocketmq properties here
   rocketmq:
-    namesrv-addr: ${ROCKETMQ_NAMESRV_ADDR}
+    name-server: ${ROCKETMQ_NAMESRV_ADDR}
