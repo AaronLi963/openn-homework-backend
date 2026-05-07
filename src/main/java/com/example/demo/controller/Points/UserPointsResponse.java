@@ -1,13 +1,11 @@
 package com.example.demo.controller.Points;
 
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
-@Setter
 public class UserPointsResponse {
-    private String userId;
-    private Integer totalPoints;
+    private final String userId;
+    private final Integer totalPoints;
 
     public UserPointsResponse(String userId, Integer totalPoints) {
         this.userId = userId;

@@ -9,6 +9,7 @@ public class AddPointsRequest {
     private String userId;
     @NotNull(message = "amount cannot be null")
     private Integer amount;
+    @NotNull(message = "reason cannot be null")
     private String reason;
     
     @Override

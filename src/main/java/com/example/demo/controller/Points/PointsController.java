@@ -2,6 +2,7 @@ package com.example.demo.controller.Points;
 
 import com.example.demo.controller.Error;
 import com.example.demo.controller.Response;
+import com.example.demo.model.Point;
 import com.example.demo.service.PointService;
 import com.example.demo.service.dto.PointDto;
 
@@ -9,10 +10,12 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.apache.logging.log4j.core.config.plugins.validation.constraints.Required;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.HashMap;
@@ -48,6 +51,21 @@ public class PointsController {
             return Response.success(new UserPointsResponse(userId, totalPoints));
         } catch (Exception e) {
             logger.error("Failed to get points for user: {}, error: {}", userId, e.getMessage());
+            return Response.error(Error.ERROR_CODE_INTERNAL_ERROR, e.getMessage());
+        }
+    }
+
+    @PutMapping("/{pointId}")
+    public Response updatePoint(@PathVariable Long pointId, @Valid @RequestBody UpdatePointRequest request) {
+        try {
+            logger.info("update reason for point: {}, reason: {}", pointId, request.getReason());
+
+            // according to the request, we don't allow to update the amount
+            Point point = pointService.updatePoint(pointId, null, request.getReason());
+            PointResponse pointResponse = new PointResponse(point.getId(), point.getUserId(), point.getReason(), point.getAmount());
+            return Response.success(pointResponse);
+        } catch (Exception e) {
+            logger.error("Failed to update point: {}, error: {}", pointId, e.getMessage());
             return Response.error(Error.ERROR_CODE_INTERNAL_ERROR, e.getMessage());
         }
     }

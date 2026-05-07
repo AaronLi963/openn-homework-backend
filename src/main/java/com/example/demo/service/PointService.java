@@ -13,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Optional;
+
 @Service
 public class PointService {
     private static final String CACHE_KEY_PREFIX = "points:user:";
@@ -58,18 +60,44 @@ public class PointService {
                 return cachedPoints;
             }
 
-            Integer points = pointRepository.sumAmountByUserId(userId);
-            if (points == null) {
+            Integer totalPoints = pointRepository.sumAmountByUserId(userId);
+            if (totalPoints == null) {
                 logger.info("No points found for user: {}", userId);
-                points = 0;
+                totalPoints = 0;
             }
 
             // cache user points after getting points from DB
-            cacheUserPoints(userId, points);
-            return points;
+            cacheUserPoints(userId, totalPoints);
+            return totalPoints;
         } catch (Exception e) {
             logger.error("Failed to get user points, userId: {}, error: {}", userId, e.getMessage());
             throw new RuntimeException("Failed to get user points", e);
+        }
+    }
+
+
+    public Point updatePoint(Long pointId, Integer amount, String reason) {
+        try {
+            Optional<Point> result = pointRepository.findById(pointId);
+            if (result.isEmpty()) {
+                logger.error("failed to get point: {}", pointId);
+                return null;
+            }
+
+            Point point = result.get();
+            if (amount != null) {
+                point.setAmount(amount);
+            }
+
+            if (reason != null) {
+                point.setReason(reason);
+            }
+            pointRepository.save(point);
+            clearCachedUserPoints(point.getUserId());
+            return point;
+        } catch (Exception e) {
+            logger.error("Failed to update point: {}, error: {}", pointId, e.getMessage());
+            throw new RuntimeException("Failed to update points", e);
         }
     }
 
