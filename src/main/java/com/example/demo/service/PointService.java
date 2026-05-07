@@ -1,11 +1,18 @@
 package com.example.demo.service;
 
 import com.example.demo.model.Point;
+import com.example.demo.mq.RocketMQManager;
+import com.example.demo.mq.RocketMQTopics;
+import com.example.demo.mq.dto.AddUserPointDto;
 import com.example.demo.repository.PointRepository;
 import com.example.demo.service.dto.PointDto;
+
+import jakarta.annotation.PostConstruct;
+
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.time.Duration;
@@ -22,6 +29,10 @@ public class PointService {
 
     private static final Logger logger = LoggerFactory.getLogger(PointService.class);
 
+    @Autowired
+    private RocketMQManager rocketMQManager;
+
+    @Transactional
     public PointDto addPoints(String userId, int amount, String reason) throws Exception {
         Point point = new Point();
         point.setUserId(userId);
@@ -30,7 +41,13 @@ public class PointService {
         try {
             pointRepository.save(point);
             logger.info("Points added successfully: {}", point);
+
+            // send RocketMQ message
+            AddUserPointDto message = new AddUserPointDto(point);
+            rocketMQManager.sendMessage(RocketMQTopics.TOPIC_USER_POINTS_TOPIC, message);
+
             clearCacheUserPoints(userId);
+
         } catch (Exception e) {
             logger.error("Failed to add points, input: {}, error: {}", point, e.getMessage());
             throw new RuntimeException("Failed to add points", e);

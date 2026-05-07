@@ -10,8 +10,10 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
+@ConfigurationProperties(prefix = "spring.data.redis")
 @Configuration
 public class RedisConfig {
 
