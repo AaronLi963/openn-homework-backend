@@ -15,8 +15,8 @@ public class GlobalExceptionHandler {
         String message = ex.getBindingResult().getFieldErrors().stream()
             .map(FieldError::getDefaultMessage)
             .findFirst()
-            .orElse("Validation failed");
-        return ResponseEntity.badRequest().body(Response.error(Error.ERROR_CODE_INVALID_REQUEST, message));
+            .orElse("Invalid input");
+        return ResponseEntity.badRequest().body(Response.error(Error.ERROR_CODE_INVALID_INPUT, message));
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)

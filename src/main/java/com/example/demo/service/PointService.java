@@ -112,7 +112,7 @@ public class PointService {
         }
     }
 
-
+    @Transactional
     public Point updatePoint(Long pointId, Integer amount, String reason) {
         try {
             Optional<Point> result = pointRepository.findById(pointId);
@@ -171,6 +171,17 @@ public class PointService {
         }
     }
 
+    @Transactional
+    public Boolean deleteUserPoints(String userId) throws Exception {
+        try {
+            pointRepository.deleteByUserId(userId);
+            clearCachedUserPoints(userId);
+            return true;
+        } catch (Exception e) {
+            logger.error("Failed to delete user points, userId: {}, error: {}", userId, e.getMessage(), e);
+            throw new RuntimeException("Service Error", e);
+        }
+    }
 
     private void cacheUserPoints(String userId, Integer points) {
         String key = getCacheKey(userId);

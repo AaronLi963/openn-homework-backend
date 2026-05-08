@@ -9,19 +9,10 @@ import com.example.demo.service.dto.PointDto;
 
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.apache.logging.log4j.core.config.plugins.validation.constraints.Required;
+import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 @RestController
@@ -83,6 +74,19 @@ public class PointsController {
             return Response.success(leadingUsers);
         } catch (Exception e) {
             logger.error("Failed to get leaderboard, error: {}", e.getMessage());
+            return Response.error(Error.ERROR_CODE_INTERNAL_ERROR, e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{userId}")
+    public Response deleteUserPoints(@PathVariable String userId) {
+        try {
+            logger.info("Deleting points for user: {}", userId);
+            pointService.deleteUserPoints(userId);
+            logger.info("Points deleted successfully for user: {}", userId);
+            return Response.success("Done");
+        } catch (Exception e) {
+            logger.error("Failed to delete points, error: {}", e.getMessage());
             return Response.error(Error.ERROR_CODE_INTERNAL_ERROR, e.getMessage());
         }
     }
