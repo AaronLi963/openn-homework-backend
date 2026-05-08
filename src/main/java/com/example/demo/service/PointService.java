@@ -6,18 +6,28 @@ import com.example.demo.mq.RocketMQTopics;
 import com.example.demo.mq.dto.AddUserPointDto;
 import com.example.demo.repository.PointRepository;
 
+import com.example.demo.service.dto.LeaderboardDto;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.PostConstruct;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class PointService {
-    private static final String CACHE_KEY_PREFIX = "points:user:";
+    private static final String USER_POINT_CACHE_KEY_PREFIX = "points:user:";
+    private static final String USER_POINT_LEADERBOARD_CACHE_KEY = "points:leaderboard";
 
     @Autowired
     private PointRepository pointRepository;
@@ -29,6 +39,33 @@ public class PointService {
 
     @Autowired
     private RocketMQManager rocketMQManager;
+
+    @PostConstruct
+    public void warmUpLeaderboard() {
+        logger.info("Warming up leaderboard");
+        int size = 1000;
+        int page = 0;
+
+        try {
+            while (true) {
+                Pageable pageable = PageRequest.of(page, size);
+                List<LeaderboardDto> leadingUsers = pointRepository.findLeaderboard(pageable);
+                if (leadingUsers.isEmpty()) {
+                    break;
+                }
+                else {
+                    logger.info("Warming up leaderboard, page: {}, size: {}", page, size);
+                    for (LeaderboardDto dto : leadingUsers) {
+                        redisTemplate.opsForZSet().add(USER_POINT_LEADERBOARD_CACHE_KEY, dto.getUserId(), dto.getTotal().doubleValue());
+                    }
+                    page++;
+                }
+            }
+            logger.info("Warmed up leaderboard");
+        } catch (Exception e) {
+            logger.error("Warming up leaderboard failed", e);
+        }
+    }
 
     @Transactional
     public Integer addPoints(String userId, int amount, String reason) throws Exception {
@@ -101,12 +138,46 @@ public class PointService {
         }
     }
 
+    public List<LeaderboardDto> getLeaderboard(Integer size) {
+        try {
+
+            Set<ZSetOperations.TypedTuple<Object>> cachedLeadingUsers =
+                    redisTemplate.opsForZSet().reverseRangeWithScores(USER_POINT_LEADERBOARD_CACHE_KEY, 0, size - 1);
+
+            Pageable pageable = PageRequest.of(0, size);
+            if (cachedLeadingUsers == null || cachedLeadingUsers.isEmpty()) {
+                logger.info("Leaderboard cache miss, warming up from DB...");
+                List<LeaderboardDto> leadingUsers = pointRepository.findLeaderboard(pageable);
+
+                for (LeaderboardDto dto : leadingUsers) {
+                    redisTemplate.opsForZSet().add(USER_POINT_LEADERBOARD_CACHE_KEY, dto.getUserId(), dto.getTotal().doubleValue());
+                }
+                return leadingUsers;
+            }
+
+            logger.info("Leaderboard cache hit");
+            List<LeaderboardDto> result = new ArrayList<>();
+            for (ZSetOperations.TypedTuple<Object> tuple : cachedLeadingUsers) {
+                String userId = String.valueOf(tuple.getValue());
+                Double score = tuple.getScore();
+                result.add(new LeaderboardDto(userId, score != null ? score.longValue() : 0L));
+            }
+
+            return result;
+
+        } catch (Exception e) {
+            logger.error("Failed to get leaderboard: {}", e.getMessage(), e);
+            throw new RuntimeException("Service Error", e);
+        }
+    }
+
 
     private void cacheUserPoints(String userId, Integer points) {
         String key = getCacheKey(userId);
         try {
             logger.info("Cache user points: userId: {}, points: {}", userId, points);
             redisTemplate.opsForValue().set(key, points);
+            setLeaderboardPoints(userId, points);
         } catch (Exception e) {
             // no need to throw exception, just log error
             logger.error("Failed to cache user points, userId: {}, error: {}", userId, e);
@@ -134,6 +205,7 @@ public class PointService {
         try {
             logger.info("Clear cached user points: userId: {}", userId);
             redisTemplate.delete(key);
+            removeLeaderboardPoints(userId);
         } catch (Exception e) {
             // no need to throw exception, just log error
             logger.error("Failed to clear cached user points, userId: {}, error: {}", userId, e);
@@ -141,6 +213,14 @@ public class PointService {
     }
 
     private String getCacheKey(String userId) {
-        return CACHE_KEY_PREFIX + userId;
+        return USER_POINT_CACHE_KEY_PREFIX + userId;
+    }
+
+    private void setLeaderboardPoints(String userId, Integer points) {
+        redisTemplate.opsForZSet().add(USER_POINT_LEADERBOARD_CACHE_KEY, userId, points);
+    }
+
+    private void removeLeaderboardPoints(String userId) {
+        redisTemplate.opsForZSet().remove(USER_POINT_LEADERBOARD_CACHE_KEY, userId);
     }
 }
