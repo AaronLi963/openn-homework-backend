@@ -143,11 +143,11 @@ public class PointService {
     public List<LeaderboardDto> getLeaderboard(Integer size) {
         try {
 
-            Set<ZSetOperations.TypedTuple<Object>> cachedTopUsers =
+            Set<ZSetOperations.TypedTuple<Object>> cachedLeadingUsers =
                     redisTemplate.opsForZSet().reverseRangeWithScores(USER_POINT_LEADERBOARD_CACHE_KEY, 0, size - 1);
 
             Pageable pageable = PageRequest.of(0, size);
-            if (cachedTopUsers == null || cachedTopUsers.isEmpty()) {
+            if (cachedLeadingUsers == null || cachedLeadingUsers.isEmpty()) {
                 logger.info("Leaderboard cache miss, warming up from DB...");
                 List<LeaderboardDto> leadingUsers = pointRepository.findLeaderboard(pageable);
 
@@ -159,7 +159,7 @@ public class PointService {
 
             logger.info("Leaderboard cache hit");
             List<LeaderboardDto> result = new ArrayList<>();
-            for (ZSetOperations.TypedTuple<Object> tuple : cachedTopUsers) {
+            for (ZSetOperations.TypedTuple<Object> tuple : cachedLeadingUsers) {
                 String userId = String.valueOf(tuple.getValue());
                 Double score = tuple.getScore();
                 result.add(new LeaderboardDto(userId, score != null ? score.longValue() : 0L));

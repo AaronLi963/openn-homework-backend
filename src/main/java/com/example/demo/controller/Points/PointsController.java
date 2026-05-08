@@ -76,10 +76,11 @@ public class PointsController {
 
     @GetMapping("/leaderboard")
     public Response getLeaderboard() {
+        Integer leaderboardSize = 10;
         try {
             logger.info("Getting leaderboard");
-            List<LeaderboardDto> points = pointService.getLeaderboard(10);
-            return Response.success(points);
+            List<LeaderboardDto> leadingUsers = pointService.getLeaderboard(leaderboardSize);
+            return Response.success(leadingUsers);
         } catch (Exception e) {
             logger.error("Failed to get leaderboard, error: {}", e.getMessage());
             return Response.error(Error.ERROR_CODE_INTERNAL_ERROR, e.getMessage());
