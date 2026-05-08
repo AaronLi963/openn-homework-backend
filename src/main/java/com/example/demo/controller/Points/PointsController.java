@@ -4,6 +4,7 @@ import com.example.demo.controller.Error;
 import com.example.demo.controller.Response;
 import com.example.demo.model.Point;
 import com.example.demo.service.PointService;
+import com.example.demo.service.dto.LeaderboardDto;
 import com.example.demo.service.dto.PointDto;
 
 import jakarta.validation.Valid;
@@ -18,7 +19,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.apache.logging.log4j.core.config.plugins.validation.constraints.Required;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 @RestController
 @RequestMapping("/points")
@@ -66,6 +70,18 @@ public class PointsController {
             return Response.success(pointResponse);
         } catch (Exception e) {
             logger.error("Failed to update point: {}, error: {}", pointId, e.getMessage());
+            return Response.error(Error.ERROR_CODE_INTERNAL_ERROR, e.getMessage());
+        }
+    }
+
+    @GetMapping("/leaderboard")
+    public Response getLeaderboard() {
+        try {
+            logger.info("Getting leaderboard");
+            List<LeaderboardDto> points = pointService.getLeaderboard(10);
+            return Response.success(points);
+        } catch (Exception e) {
+            logger.error("Failed to get leaderboard, error: {}", e.getMessage());
             return Response.error(Error.ERROR_CODE_INTERNAL_ERROR, e.getMessage());
         }
     }
