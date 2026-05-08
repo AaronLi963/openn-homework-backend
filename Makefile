@@ -14,3 +14,6 @@ run-app:
 	REDIS_PORT=6379 \
 	ROCKETMQ_NAMESRV_ADDR=localhost:9876 \
 	./mvnw spring-boot:run
+
+unit-test:
+	./mvnw test
