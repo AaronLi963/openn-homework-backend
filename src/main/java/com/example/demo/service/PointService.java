@@ -29,8 +29,6 @@ public class PointService {
     private static final String USER_POINT_CACHE_KEY_PREFIX = "points:user:";
     private static final String USER_POINT_LEADERBOARD_CACHE_KEY = "points:leaderboard";
 
-    private static final Integer LEADERBOARD_CACHE_SIZE = 10;
-
     @Autowired
     private PointRepository pointRepository;
 
