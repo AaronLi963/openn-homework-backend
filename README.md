@@ -3,6 +3,18 @@
 ## Overview
 A high-performance microservice designed to handle user point transactions and real-time leaderboard rankings. The system balances immediate data persistence with fast, low-latency reads.
 
+## Note
+1. Some configurations are from environment variables, those are included in Makefile.
+We can run the service by running
+``
+make run-app
+``
+
+2. You may need to update the `brokerIP1` in `broker.conf` and un-comment it.
+Otherwise, you may get the connection issue. 
+
+
+
 ## Architecture
 The service utilizes a layered architecture with the following components:
 - **Spring Boot 3**: Core application framework.
